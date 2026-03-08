@@ -85,11 +85,16 @@ eduguard-ai/
 ### 1. Clone and Install Dependencies
 
 ```bash
+# Clean pnpm cache (if you see workspace warnings)
+pnpm store prune
+
 # Install root dependencies
 pnpm install
 
 # This installs dependencies for both packages/backend and packages/frontend
 ```
+
+**Note:** pnpm is configured with `pnpm-workspace.yaml` for proper monorepo support. If you see "workspaces field in package.json" warnings, run `pnpm store prune` and try again.
 
 ### 2. Configure Environment Variables
 
@@ -307,13 +312,48 @@ Guidelines for contributing to EduGuard AI:
 
 MIT License - See LICENSE file for details
 
-## 🆘 Support
+## 🆘 Troubleshooting
+
+### pnpm Workspace Warnings
+If you see: "The 'workspaces' field in package.json is not supported by pnpm"
+```bash
+# Clean the pnpm store and reinstall
+pnpm store prune
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
+```
+
+### Database Connection Issues
+```bash
+# Check DATABASE_URL is set correctly in packages/backend/.env
+# Verify Neon database is accessible
+# Try pushing schema again
+pnpm db:push
+```
+
+### Port Already in Use
+```bash
+# Change ports in environment variables or kill existing processes
+# Backend: PORT=3001 pnpm dev:backend
+# Frontend: PORT=3001 pnpm dev:frontend
+```
+
+### Node Modules Issues
+```bash
+# Complete clean reinstall
+pnpm clean
+pnpm install
+pnpm build
+```
+
+## 📞 Support
 
 For issues and questions:
 1. Check existing GitHub issues
-2. Review API documentation
+2. Review API documentation in DEVELOPMENT.md
 3. Check logs: `pnpm dev` output
-4. Contact: support@eduguard.app
+4. Review TESTING.md for test guidance
+5. Contact: support@eduguard.app
 
 ## 🗺️ Roadmap
 

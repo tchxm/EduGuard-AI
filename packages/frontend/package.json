@@ -1,0 +1,46 @@
+{
+  "name": "@eduguard/frontend",
+  "version": "2.0.0",
+  "description": "Next.js 15 frontend for EduGuard AI",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "next": "^15.0.0",
+    "axios": "^1.6.5",
+    "zustand": "^4.4.7",
+    "swr": "^2.2.4",
+    "@radix-ui/react-dialog": "^1.1.1",
+    "@radix-ui/react-dropdown-menu": "^2.0.6",
+    "@radix-ui/react-tabs": "^1.0.4",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "date-fns": "^2.30.0",
+    "lucide-react": "^0.294.0",
+    "recharts": "^2.10.3",
+    "tailwind-merge": "^2.2.1",
+    "face-api.js": "^0.22.2",
+    "html5-camera-photo": "^3.2.3",
+    "qrcode.react": "^3.0.2",
+    "jsqr": "^1.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.6",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^15.0.0",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.1"
+  }
+}

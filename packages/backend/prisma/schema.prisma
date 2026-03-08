@@ -1,0 +1,218 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String
+  firstName String
+  lastName  String
+  role      UserRole   @default(TEACHER)
+  avatar    String?
+  phone     String?
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relations
+  classes   Class[]
+  sessions  Session[]
+  attendance Attendance[]
+  notifications Notification[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Session {
+  id        String     @id @default(cuid())
+  userId    String
+  token     String     @unique
+  expiresAt DateTime
+  createdAt DateTime   @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+model Class {
+  id          String     @id @default(cuid())
+  name        String
+  code        String     @unique
+  description String?
+  teacherId   String
+  capacity    Int?
+  room        String?
+  schedule    String?    // "Monday 10:00, Wednesday 14:00" format
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  teacher     User       @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  students    StudentClass[]
+  attendance  Attendance[]
+  sessions    AttendanceSession[]
+
+  @@index([teacherId])
+  @@index([code])
+}
+
+model Student {
+  id          String     @id @default(cuid())
+  enrollmentId String    @unique
+  firstName   String
+  lastName    String
+  email       String     @unique
+  phone       String?
+  avatar      String?
+  faceEmbedding String?  // Store face encoding as JSON string
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  classes     StudentClass[]
+  attendance  Attendance[]
+  notifications Notification[]
+
+  @@index([enrollmentId])
+  @@index([email])
+}
+
+model StudentClass {
+  id          String     @id @default(cuid())
+  studentId   String
+  classId     String
+  enrolledAt  DateTime   @default(now())
+  status      EnrollmentStatus @default(ACTIVE)
+
+  student     Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class       Class      @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, classId])
+  @@index([studentId])
+  @@index([classId])
+}
+
+model AttendanceSession {
+  id        String     @id @default(cuid())
+  classId   String
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime?
+  status    SessionStatus @default(ONGOING)
+  usesFaceRecognition Boolean @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  class     Class      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  records   Attendance[]
+
+  @@index([classId])
+  @@index([date])
+}
+
+model Attendance {
+  id        String     @id @default(cuid())
+  studentId String
+  classId   String
+  sessionId String
+  userId    String
+  timestamp DateTime   @default(now())
+  status    AttendanceStatus @default(PRESENT)
+  detectionMethod String // "face", "manual", "qr_code"
+  confidence Float?    // Face detection confidence score 0-1
+  notes     String?
+  markedAt  DateTime?
+
+  student   Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class     Class      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  session   AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id])
+
+  @@unique([studentId, sessionId])
+  @@index([studentId])
+  @@index([classId])
+  @@index([sessionId])
+  @@index([timestamp])
+}
+
+model Notification {
+  id        String     @id @default(cuid())
+  userId    String?
+  studentId String?
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  expiresAt DateTime?
+
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student   Student?   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([studentId])
+  @@index([read])
+}
+
+model AuditLog {
+  id        String     @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  userId    String?
+  details   String?    // JSON string
+  ipAddress String?
+  createdAt DateTime   @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  GRADUATED
+}
+
+enum SessionStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+  INCOMPLETE
+}
+
+enum NotificationType {
+  ATTENDANCE_ALERT
+  ENROLLMENT_CONFIRMATION
+  CLASS_UPDATE
+  IMPORTANT_MESSAGE
+  SYSTEM_ALERT
+}

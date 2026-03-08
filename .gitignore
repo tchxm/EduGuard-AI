@@ -1,17 +1,84 @@
-# Python cache/bytecode
-__pycache__/
-*.py[cod]
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
 
-# Local environment secrets
+# Environment variables
 .env
-.env.*
-!.env.example
+.env.local
+.env.*.local
+.env.production.local
 
-# Local runtime/database artifacts
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*~
+.DS_Store
+.sublime-*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# Runtime files
 instance/
 *.db
-attendance_results.json
+*.sqlite
+*.sqlite3
+static/dataset/
+uploads/
 
-# Uploaded student images (PII) should stay local
-static/dataset/*
-!static/dataset/.gitkeep
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Prisma
+.env
+.env.local
+prisma/dev.db
+prisma/dev.db-journal
+
+# Testing
+coverage/
+.nyc_output/
+
+# Development
+.turbo/
+.env.*.local
+*.sock
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache

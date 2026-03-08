@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: eduguard-db
+    environment:
+      POSTGRES_USER: eduguard
+      POSTGRES_PASSWORD: eduguard_password_change_in_production
+      POSTGRES_DB: eduguard
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eduguard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache (Optional)
+  cache:
+    image: redis:7-alpine
+    container_name: eduguard-cache
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Fastify Backend
+  backend:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+    container_name: eduguard-backend
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://eduguard:eduguard_password_change_in_production@db:5432/eduguard
+      REDIS_URL: redis://cache:6379
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-key-change-in-production}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./packages/backend/src:/app/packages/backend/src
+    command: npm run dev
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: packages/frontend/Dockerfile
+    container_name: eduguard-frontend
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./packages/frontend/app:/app/packages/frontend/app
+      - ./packages/frontend/components:/app/packages/frontend/components
+      - ./packages/frontend/lib:/app/packages/frontend/lib
+    command: npm run dev
+
+volumes:
+  postgres_data:
+    driver: local

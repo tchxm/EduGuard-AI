@@ -1,0 +1,62 @@
+{% extends 'layout.html' %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<div class="row align-items-center min-vh-75">
+    <div class="col-md-6">
+        <h1 class="display-4 fw-bold mb-4">Intelligent Attendance System</h1>
+        <p class="lead mb-4">EduGuardAI is an advanced face recognition-based attendance system designed for educational institutions. Simplify attendance taking, eliminate proxy attendance, and instantly notify absentees.</p>
+        <div class="d-grid gap-2 d-md-flex">
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg me-md-2">Teacher Login</a>
+            <a href="{{ url_for('register') }}" class="btn btn-outline-secondary btn-lg">Register</a>
+        </div>
+    </div>
+    <div class="col-md-6 d-none d-md-block">
+        <img src="{{ url_for('static', filename='img/attendance.svg') }}" alt="Attendance System" class="img-fluid">
+    </div>
+</div>
+
+<div class="row mt-5 pt-5">
+    <div class="col-12 text-center mb-4">
+        <h2 class="fw-bold">Key Features</h2>
+        <p class="lead">Why choose EduGuardAI for attendance management</p>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-camera fa-3x text-primary"></i>
+                </div>
+                <h4 class="card-title">Facial Recognition</h4>
+                <p class="card-text">Accurately identifies students using advanced AI-based facial recognition technology.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-bell fa-3x text-primary"></i>
+                </div>
+                <h4 class="card-title">Instant Notifications</h4>
+                <p class="card-text">Automatically sends notifications to absent students to improve accountability.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-chart-bar fa-3x text-primary"></i>
+                </div>
+                <h4 class="card-title">Detailed Analytics</h4>
+                <p class="card-text">Get insights on attendance patterns and generate comprehensive reports.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

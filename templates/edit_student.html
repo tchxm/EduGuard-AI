@@ -1,0 +1,62 @@
+{% extends 'layout.html' %}
+
+{% block title %}Edit Student{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('view_class', class_id=class_obj.id) }}">{{ class_obj.name }} - {{ class_obj.section }}</a></li>
+        <li class="breadcrumb-item active">Edit Student</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>Edit Student: {{ student.name }}</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('edit_student', student_id=student.id) }}" enctype="multipart/form-data" data-validate="true" novalidate>
+                    <div class="mb-3">
+                        <label for="student_id" class="form-label">Student ID</label>
+                        <input type="text" class="form-control" id="student_id" name="student_id" value="{{ student.student_id }}" required minlength="1" maxlength="50">
+                        <div class="invalid-feedback">Student ID is required (max 50 characters).</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ student.name }}" required minlength="2" maxlength="100">
+                        <div class="invalid-feedback">Name must be 2-100 characters.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ student.email }}" required>
+                        <div class="invalid-feedback">Enter a valid email address.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <input type="text" class="form-control" id="phone" name="phone" value="{{ student.phone }}" required minlength="7" maxlength="20" pattern="^[0-9+()\\-\\s]+$">
+                        <div class="invalid-feedback">Enter a valid phone number (7-20 chars).</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="face_image" class="form-label">Face Image</label>
+                        {% if student.image_file and student.image_file != 'default.jpg' %}
+                        <div class="mb-2">
+                            <img src="{{ url_for('static', filename='dataset/' + student.image_file) }}" 
+                                alt="{{ student.name }}" class="img-thumbnail" width="100">
+                        </div>
+                        {% endif %}
+                        <input type="file" class="form-control" id="face_image" name="face_image" accept="image/*">
+                        <div class="form-text">Upload a new photo to replace the existing one (optional).</div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('view_class', class_id=class_obj.id) }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary" data-loading-text="Updating student...">Update Student</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

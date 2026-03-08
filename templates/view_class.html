@@ -1,0 +1,131 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ class_obj.name }} - {{ class_obj.section }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">{{ class_obj.name }} - {{ class_obj.section }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-chalkboard me-2"></i>{{ class_obj.name }} - {{ class_obj.section }}</h2>
+    <div>
+        <a href="{{ url_for('start_attendance', class_id=class_obj.id) }}" class="btn btn-success">
+            <i class="fas fa-clipboard-check me-1"></i> Take Attendance
+        </a>
+        <a href="{{ url_for('new_student', class_id=class_obj.id) }}" class="btn btn-primary">
+            <i class="fas fa-user-plus me-1"></i> Add Student
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Students</h6>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown">
+                        <i class="fas fa-download me-1"></i> Export
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                        <li><a class="dropdown-item" href="{{ url_for('export_students_pdf', class_id=class_obj.id) }}"><i class="far fa-file-pdf me-1"></i> PDF</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('export_students_excel', class_id=class_obj.id) }}"><i class="far fa-file-excel me-1"></i> Excel</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if students %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover custom-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="80">Image</th>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Face Record</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>
+                                    {% if student.image_file and student.image_file != 'default.jpg' %}
+                                    <img src="{{ url_for('static', filename='dataset/' + student.image_file) }}" 
+                                        alt="{{ student.name }}" class="img-thumbnail" width="60">
+                                    {% else %}
+                                    <div class="text-center">
+                                        <i class="fas fa-user-circle fa-2x text-muted"></i>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>{{ student.student_id }}</td>
+                                <td>{{ student.name }}</td>
+                                <td>{{ student.email }}</td>
+                                <td>{{ student.phone }}</td>
+                                <td>
+                                    {% if student.face_encoding %}
+                                    <span class="badge bg-success"><i class="fas fa-check me-1"></i> Registered</span>
+                                    {% else %}
+                                    <span class="badge bg-warning"><i class="fas fa-exclamation-triangle me-1"></i> Not Registered</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('edit_student', student_id=student.id) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit me-1"></i> Edit
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ student.id }}">
+                                            <i class="fas fa-trash me-1"></i> Delete
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Delete Confirmation Modal -->
+                                    <div class="modal fade" id="deleteModal{{ student.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ student.id }}" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="deleteModalLabel{{ student.id }}">Confirm Delete</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Are you sure you want to delete <strong>{{ student.name }}</strong>? This action cannot be undone.
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <form action="{{ url_for('delete_student', student_id=student.id) }}" method="POST" style="display: inline;" data-validate="true" novalidate>
+                                                        <button type="submit" class="btn btn-danger" data-loading-text="Deleting...">Delete</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-users fa-4x text-muted"></i>
+                    </div>
+                    <h5>No students found</h5>
+                    <p class="text-muted">You haven't added any students to this class yet.</p>
+                    <a href="{{ url_for('new_student', class_id=class_obj.id) }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-1"></i> Add Student
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

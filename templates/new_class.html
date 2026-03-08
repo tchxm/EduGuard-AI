@@ -1,0 +1,33 @@
+{% extends 'layout.html' %}
+
+{% block title %}Add New Class{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-chalkboard me-2"></i>Add New Class</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('new_class') }}" data-validate="true" novalidate>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Class Name</label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="e.g. Computer Science" required minlength="2" maxlength="100">
+                        <div class="invalid-feedback">Class name must be 2-100 characters.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="section" class="form-label">Section</label>
+                        <input type="text" class="form-control" id="section" name="section" placeholder="e.g. A" required minlength="1" maxlength="20">
+                        <div class="invalid-feedback">Section is required (max 20 characters).</div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary" data-loading-text="Saving class...">Save Class</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

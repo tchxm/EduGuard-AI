@@ -1,0 +1,376 @@
+{% extends 'layout.html' %}
+
+{% block title %}Attendance Results{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('view_class', class_id=class_obj.id) }}">{{ class_obj.name }} - {{ class_obj.section }}</a></li>
+        <li class="breadcrumb-item active">Attendance Results</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center page-header">
+    <h2 class="page-title"><i class="fas fa-clipboard-list me-2"></i>Attendance Results</h2>
+    <div>
+        <form action="{{ url_for('send_notifications', attendance_id=attendance.id) }}" method="POST" style="display: inline;" data-validate="true" novalidate>
+            <button type="submit" class="btn btn-warning me-2" data-loading-text="Sending...">
+                <i class="fas fa-bell me-1"></i> Send Absence Notifications
+            </button>
+        </form>
+        <a href="{{ url_for('view_class', class_id=class_obj.id) }}" class="btn btn-primary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Class
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card section-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">{{ class_obj.name }} - {{ class_obj.section }}</h5>
+                        <p class="card-text">Date: {{ attendance.date.strftime('%B %d, %Y') }}</p>
+                    </div>
+                    <div class="text-end">
+                        <div class="d-flex align-items-center">
+                            <div class="me-4">
+                                <span class="badge bg-success kpi-badge">{{ present_count }} Present</span>
+                            </div>
+                            <div>
+                                <span class="badge bg-danger kpi-badge">{{ absent_count }} Absent</span>
+                            </div>
+                        </div>
+                        <div class="progress mt-2" style="height: 10px;">
+                            {% if present_count + absent_count > 0 %}
+                                {% set present_percentage = (present_count / (present_count + absent_count)) * 100 %}
+                            {% else %}
+                                {% set present_percentage = 0 %}
+                            {% endif %}
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ present_percentage }}%" aria-valuenow="{{ present_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="mt-2 d-flex gap-3 small justify-content-end sync-strip">
+                            <span id="sync-state" class="text-info">Idle</span>
+                            <span id="sync-pending">Pending: 0</span>
+                            <span id="sync-failed">Failed: 0</span>
+                            <span id="sync-last-update">Last update: Never</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Attendance Details</h6>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown">
+                        <i class="fas fa-download me-1"></i> Export
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                        <li><a class="dropdown-item" href="{{ url_for('export_attendance_pdf', attendance_id=attendance.id) }}"><i class="far fa-file-pdf me-1"></i> PDF</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('export_attendance_excel', attendance_id=attendance.id) }}"><i class="far fa-file-excel me-1"></i> Excel</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="attendance-controls d-flex flex-wrap align-items-center justify-content-between mb-3">
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="btn-group" role="group" aria-label="Attendance filter">
+                            <button type="button" class="btn btn-sm btn-outline-info action-chip filter-btn active" data-filter="all">All</button>
+                            <button type="button" class="btn btn-sm btn-outline-success action-chip filter-btn" data-filter="present">Present</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger action-chip filter-btn" data-filter="absent">Absent</button>
+                        </div>
+                    </div>
+                    <div class="mt-2 mt-md-0" style="min-width: 230px;">
+                        <input id="attendance-search" type="text" class="form-control form-control-sm" placeholder="Search by name or student ID">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover custom-table attendance-table" id="attendance-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="80">Image</th>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Notification</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in attendance_data %}
+                            <tr data-status="{{ 'present' if item.record.status else 'absent' }}" data-search="{{ (item.student.student_id ~ ' ' ~ item.student.name)|lower }}">
+                                <td data-label="Image">
+                                    {% if item.student.image_file and item.student.image_file != 'default.jpg' %}
+                                    <img src="{{ url_for('static', filename='dataset/' + item.student.image_file) }}" 
+                                        alt="{{ item.student.name }}" class="img-thumbnail" width="60">
+                                    {% else %}
+                                    <div class="text-center">
+                                        <i class="fas fa-user-circle fa-2x text-muted"></i>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td data-label="Student ID">{{ item.student.student_id }}</td>
+                                <td data-label="Name">{{ item.student.name }}</td>
+                                <td data-label="Status">
+                                    {% if item.record.status %}
+                                    <span class="badge bg-success">Present</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Absent</span>
+                                    {% endif %}
+                                </td>
+                                <td data-label="Notification">
+                                    {% if not item.record.status %}
+                                        {% if item.record.notification_sent %}
+                                        <span class="badge bg-info">Sent</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    {% else %}
+                                    <span class="badge bg-secondary">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td data-label="Action" class="actions-cell">
+                                    <button class="btn btn-sm btn-outline-primary toggle-attendance" 
+                                            data-student-id="{{ item.student.id }}" 
+                                            data-attendance-id="{{ attendance.id }}" 
+                                            data-current-status="{{ '1' if item.record.status else '0' }}">
+                                        {% if item.record.status %}
+                                        <i class="fas fa-times me-1"></i> Mark Absent
+                                        {% else %}
+                                        <i class="fas fa-check me-1"></i> Mark Present
+                                        {% endif %}
+                                    </button>
+                                    <span class="small text-info d-none row-saving ms-2">
+                                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Saving...
+                                    </span>
+                                    <button type="button" class="btn btn-sm btn-outline-warning d-none row-retry-btn ms-2">Retry</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle attendance status
+        const toggleButtons = document.querySelectorAll('.toggle-attendance');
+        const presentBadge = document.querySelector('.badge.bg-success.p-2');
+        const absentBadge = document.querySelector('.badge.bg-danger.p-2');
+        const progressBar = document.querySelector('.progress-bar.bg-success');
+        const syncStateElement = document.getElementById('sync-state');
+        const syncPendingElement = document.getElementById('sync-pending');
+        const syncFailedElement = document.getElementById('sync-failed');
+        const syncLastUpdateElement = document.getElementById('sync-last-update');
+        const searchInput = document.getElementById('attendance-search');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        let pendingSyncCount = 0;
+        const failedSyncRows = new Set();
+        let lastSyncedAt = null;
+        let activeFilter = 'all';
+
+        function formatTime(dateObj) {
+            return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function updateSyncStatus() {
+            if (syncPendingElement) syncPendingElement.textContent = `Pending: ${pendingSyncCount}`;
+            if (syncFailedElement) syncFailedElement.textContent = `Failed: ${failedSyncRows.size}`;
+            if (syncLastUpdateElement) {
+                syncLastUpdateElement.textContent = `Last update: ${lastSyncedAt ? formatTime(lastSyncedAt) : 'Never'}`;
+            }
+            if (!syncStateElement) return;
+            if (pendingSyncCount > 0) {
+                syncStateElement.textContent = 'Syncing...';
+                syncStateElement.className = 'text-info';
+            } else if (failedSyncRows.size > 0) {
+                syncStateElement.textContent = 'Out of sync';
+                syncStateElement.className = 'text-warning';
+            } else {
+                syncStateElement.textContent = 'All changes synced';
+                syncStateElement.className = 'text-success';
+            }
+        }
+
+        function updateSummary() {
+            const rows = document.querySelectorAll('#attendance-table tbody tr');
+            let present = 0;
+            let absent = 0;
+
+            rows.forEach(row => {
+                const statusBadge = row.querySelector('td:nth-child(4) .badge');
+                if (!statusBadge) return;
+                if (statusBadge.textContent.trim().toLowerCase() === 'present') {
+                    present += 1;
+                } else {
+                    absent += 1;
+                }
+            });
+
+            if (presentBadge) presentBadge.textContent = `${present} Present`;
+            if (absentBadge) absentBadge.textContent = `${absent} Absent`;
+
+            const total = present + absent;
+            const percentage = total > 0 ? (present / total) * 100 : 0;
+            if (progressBar) {
+                progressBar.style.width = `${percentage}%`;
+                progressBar.setAttribute('aria-valuenow', String(percentage));
+            }
+        }
+
+        function applyFilters() {
+            const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+            document.querySelectorAll('#attendance-table tbody tr').forEach(row => {
+                const status = row.dataset.status || '';
+                const haystack = row.dataset.search || '';
+                const matchesFilter = activeFilter === 'all' || status === activeFilter;
+                const matchesQuery = !query || haystack.includes(query);
+                row.style.display = matchesFilter && matchesQuery ? '' : 'none';
+            });
+        }
+        
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', async function() {
+                const studentId = this.getAttribute('data-student-id');
+                const attendanceId = this.getAttribute('data-attendance-id');
+                const currentStatus = this.getAttribute('data-current-status') === '1';
+                const newStatus = !currentStatus;
+                const row = this.closest('tr');
+                const savingIndicator = row ? row.querySelector('.row-saving') : null;
+                const retryBtn = row ? row.querySelector('.row-retry-btn') : null;
+                const rowKey = `${attendanceId}:${studentId}`;
+
+                if (retryBtn) {
+                    retryBtn.classList.add('d-none');
+                    retryBtn.dataset.retryStatus = '';
+                }
+                failedSyncRows.delete(rowKey);
+                if (savingIndicator) savingIndicator.classList.remove('d-none');
+                pendingSyncCount += 1;
+                updateSyncStatus();
+                this.disabled = true;
+                
+                try {
+                    const response = await fetch('/api/mark_attendance', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            student_id: studentId,
+                            attendance_id: attendanceId,
+                            status: newStatus
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok && result.success) {
+                        // Update the UI
+                        const statusCell = row.querySelector('td:nth-child(4) .badge');
+                        const notificationCell = row.querySelector('td:nth-child(5) .badge');
+                        
+                        if (newStatus) {
+                            statusCell.textContent = 'Present';
+                            statusCell.classList.remove('bg-danger');
+                            statusCell.classList.add('bg-success');
+                            
+                            notificationCell.textContent = 'N/A';
+                            notificationCell.classList.remove('bg-info', 'bg-warning');
+                            notificationCell.classList.add('bg-secondary');
+                            
+                            this.innerHTML = '<i class="fas fa-times me-1"></i> Mark Absent';
+                            row.dataset.status = 'present';
+                        } else {
+                            statusCell.textContent = 'Absent';
+                            statusCell.classList.remove('bg-success');
+                            statusCell.classList.add('bg-danger');
+                            
+                            notificationCell.textContent = 'Pending';
+                            notificationCell.classList.remove('bg-secondary');
+                            notificationCell.classList.add('bg-warning');
+                            
+                            this.innerHTML = '<i class="fas fa-check me-1"></i> Mark Present';
+                            row.dataset.status = 'absent';
+                        }
+                        
+                        this.setAttribute('data-current-status', newStatus ? '1' : '0');
+                        updateSummary();
+                        applyFilters();
+                        lastSyncedAt = new Date();
+                        updateSyncStatus();
+                        if (window.showToast) {
+                            window.showToast('Attendance updated successfully.', 'success');
+                        }
+                    } else {
+                        failedSyncRows.add(rowKey);
+                        if (retryBtn) {
+                            retryBtn.classList.remove('d-none');
+                            retryBtn.dataset.retryStatus = newStatus ? 'present' : 'absent';
+                        }
+                        if (window.showToast) {
+                            window.showToast(result.error || 'Failed to update attendance status.', 'danger');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error updating attendance:', error);
+                    failedSyncRows.add(rowKey);
+                    if (retryBtn) {
+                        retryBtn.classList.remove('d-none');
+                        retryBtn.dataset.retryStatus = newStatus ? 'present' : 'absent';
+                    }
+                    if (window.showToast) {
+                        window.showToast('Network error while updating attendance.', 'danger');
+                    }
+                } finally {
+                    this.disabled = false;
+                    pendingSyncCount = Math.max(0, pendingSyncCount - 1);
+                    if (savingIndicator) savingIndicator.classList.add('d-none');
+                    updateSyncStatus();
+                }
+            });
+
+            const row = button.closest('tr');
+            const retryBtn = row ? row.querySelector('.row-retry-btn') : null;
+            if (retryBtn) {
+                retryBtn.addEventListener('click', function() {
+                    const retryStatus = retryBtn.dataset.retryStatus === 'present';
+                    button.setAttribute('data-current-status', retryStatus ? '0' : '1');
+                    button.click();
+                });
+            }
+        });
+
+        if (searchInput) {
+            searchInput.addEventListener('input', applyFilters);
+        }
+
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                filterButtons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                activeFilter = this.dataset.filter || 'all';
+                applyFilters();
+            });
+        });
+
+        updateSyncStatus();
+        updateSummary();
+        applyFilters();
+    });
+</script>
+{% endblock %} 

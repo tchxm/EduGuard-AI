@@ -1,0 +1,470 @@
+/* EduGuard AI CSS */
+
+/* Global styles */
+:root {
+    --primary-color: #4e73df;
+    --secondary-color: #6c757d;
+    --success-color: #1cc88a;
+    --danger-color: #e74a3b;
+    --warning-color: #f6c23e;
+    --info-color: #36b9cc;
+}
+
+body {
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: #0B0F28;
+    color: #F8F8F8;
+}
+
+/* Card styles */
+.card {
+    border: none;
+    border-radius: 0.35rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.card-header {
+    background-color: #002766;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.border-left-primary {
+    border-left: 0.25rem solid var(--primary-color) !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid var(--success-color) !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid var(--warning-color) !important;
+}
+
+/* Dashboard cards */
+.dash-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #ffffff;
+    background-clip: border-box;
+    border: 1px solid #e3e6f0;
+    border-radius: 0.35rem;
+}
+
+/* Webcam container */
+.webcam-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.webcam-container video, .webcam-container canvas {
+    width: 100%;
+    height: auto;
+    border-radius: 0.35rem;
+}
+
+/* Student list during attendance */
+.student-list-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.student-list-item:hover {
+    background-color: #f8f9fc;
+}
+
+.student-list-item img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+
+.student-present {
+    background-color: rgba(28, 200, 138, 0.1);
+    border-left: 3px solid var(--success-color);
+}
+
+.student-absent {
+    background-color: rgba(231, 74, 59, 0.1);
+    border-left: 3px solid var(--danger-color);
+}
+
+/* Footer */
+.footer {
+    position: relative;
+    margin-top: 2rem;
+    bottom: 0;
+    width: 100%;
+}
+.text-muted {
+    --bs-text-opacity: 1;
+    color: #B0B3B8 !important;
+}
+.bg-light {
+    --bs-bg-opacity: 1;
+    background-color: #101223 !important;
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+    .dash-stats {
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Custom styles for attendance */
+.detection-area {
+    border: 2px dashed #ccc;
+    padding: 10px;
+    background-color: #f8f9fc;
+    text-align: center;
+    margin-bottom: 20px;
+    border-radius: 0.35rem;
+}
+
+.detection-active {
+    border-color: var(--success-color);
+    background-color: rgba(28, 200, 138, 0.1);
+}
+
+/* Progress animation */
+@keyframes progress {
+    0% {
+        width: 0%;
+    }
+    100% {
+        width: 100%;
+    }
+}
+
+.progress-animated .progress-bar {
+    animation: progress 2s linear;
+} 
+
+.bg-primary {
+    --bs-bg-opacity: 1;
+    background-color: #002766 !important;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: #ffc107 !important;
+}
+
+.card {
+    position: relative;
+    display: flex
+;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #181D42 !important;
+    background-clip: border-box;
+    border: 1px solid rgba(0, 0, 0, .125);
+    border-radius: .25rem;
+}
+
+.btn-outline-secondary {
+    color: #ffc925 !important;
+    border-color: #6c757d !important;
+}
+
+.text-primary {
+    --bs-text-opacity: 1;
+    color: #00E5FF !important;
+}
+
+/* Fix for table hover issue - text disappearing on hover */
+.table-hover tbody tr:hover {
+    color: #F8F8F8 !important;  /* Keep text visible on hover */
+    background-color: rgba(255, 255, 255, 0.1) !important;  /* Subtle highlight */
+}
+
+.table-hover tbody tr:hover td {
+    color: #F8F8F8 !important;  /* Ensure text in cells remains visible */
+}
+
+/* Ensure table text is visible */
+.table {
+    color: #F8F8F8 !important;
+}
+
+.table-light {
+    color: #F8F8F8 !important;
+    background-color: #2a3158 !important;
+}
+
+.table-light th {
+    color: #F8F8F8 !important;
+    background-color: #2a3158 !important;
+}
+
+/* Fix for any other hover effects that might cause text to disappear */
+*:hover {
+    text-decoration: inherit;
+}
+
+/* Fix for text visibility in headings and other elements */
+h1, h2, h3, h4, h5, h6, p, span, div, a, button, input, select, textarea, label {
+    color: inherit;
+}
+
+/* Fix for text in cards and other containers */
+.card-title, .card-text, .card-header h6, .card-body {
+    color: #F8F8F8 !important;
+}
+
+/* Fix for text in breadcrumbs */
+.breadcrumb-item, .breadcrumb-item.active, .breadcrumb-item a {
+    color: #F8F8F8 !important;
+}
+
+/* Fix for text in buttons */
+.btn:hover {
+    color: inherit;
+}
+
+/* Fix for text in dropdown menus */
+.dropdown-menu {
+    background-color: #181D42 !important;
+}
+
+.dropdown-item {
+    color: #F8F8F8 !important;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #F8F8F8 !important;
+}
+
+/* Custom table styles with fixed hover effect */
+.custom-table {
+    color: #F8F8F8 !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.custom-table thead th {
+    background-color: #2a3158 !important;
+    color: #F8F8F8 !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.custom-table tbody tr {
+    color: #F8F8F8 !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.custom-table tbody tr:hover {
+    color: #F8F8F8 !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.custom-table tbody tr td {
+    color: #F8F8F8 !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.custom-table tbody tr:hover td {
+    color: #F8F8F8 !important;
+}
+
+/* Fix for z-index issues that might cause elements to disappear */
+.table-responsive {
+    position: relative;
+    z-index: 1;
+}
+
+.table {
+    position: relative;
+    z-index: 2;
+}
+
+.table tbody tr {
+    position: relative;
+    z-index: 3;
+}
+
+.table tbody tr td {
+    position: relative;
+    z-index: 4;
+}
+
+/* Ensure text doesn't disappear on hover by preventing any opacity changes */
+*:hover {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Fix for any potential issues with text color in specific contexts */
+.card-body .table {
+    color: #F8F8F8 !important;
+}
+
+.card-body .table td,
+.card-body .table th {
+    color: #F8F8F8 !important;
+}
+
+.btn-outline-primary {
+    color: #ffc107 !important;
+    border-color: #0d6efd;
+}
+
+/* Validation + toast UX */
+.was-validated .form-control:invalid,
+.form-control.is-invalid,
+.was-validated .form-select:invalid,
+.form-select.is-invalid {
+    border-color: #ff6b6b !important;
+}
+
+.invalid-feedback {
+    color: #ff9f9f;
+}
+
+#app-toast-container {
+    z-index: 1080;
+}
+
+/* Notification visibility fixes */
+.toast {
+    opacity: 1 !important;
+    --bs-toast-border-color: rgba(255, 255, 255, 0.18);
+}
+
+.toast .toast-body {
+    font-weight: 600;
+}
+
+.alert {
+    opacity: 1 !important;
+}
+
+.alert-warning {
+    color: #1f1f1f !important;
+}
+
+.alert-info {
+    color: #0a2530 !important;
+}
+
+/* UI polish: spacing + hierarchy */
+.page-header {
+    margin-bottom: 1.25rem;
+}
+
+.page-title {
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    margin-bottom: 0.2rem;
+}
+
+.section-card {
+    margin-bottom: 1rem;
+}
+
+.kpi-badge {
+    font-size: 0.95rem !important;
+    padding: 0.55rem 0.75rem !important;
+}
+
+.sync-strip {
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding-top: 0.55rem;
+    margin-top: 0.55rem;
+}
+
+.action-chip {
+    border-radius: 999px;
+}
+
+.attendance-controls .form-control,
+.attendance-controls .btn {
+    height: 38px;
+}
+
+/* Better mobile behavior for attendance tables */
+.attendance-table td {
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 1.35rem;
+    }
+
+    .attendance-controls {
+        gap: 0.5rem;
+    }
+
+    .attendance-controls .btn-group {
+        width: 100%;
+        display: flex;
+    }
+
+    .attendance-controls .btn-group .btn {
+        flex: 1 1 auto;
+    }
+
+    .attendance-table thead {
+        display: none;
+    }
+
+    .attendance-table,
+    .attendance-table tbody,
+    .attendance-table tr,
+    .attendance-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .attendance-table tr {
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.5rem;
+        margin-bottom: 0.75rem;
+        padding: 0.45rem 0.6rem;
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .attendance-table td {
+        border: none !important;
+        padding: 0.32rem 0 !important;
+        text-align: left;
+    }
+
+    .attendance-table td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 0.75rem;
+        color: #B0B3B8;
+        margin-bottom: 0.15rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .attendance-table td[data-label="Image"]::before {
+        margin-bottom: 0.35rem;
+    }
+
+    .attendance-table td.actions-cell .toggle-attendance,
+    .attendance-table td.actions-cell .row-retry-btn {
+        width: 100%;
+        margin-top: 0.35rem;
+    }
+
+    #student-list .list-group-item {
+        padding-top: 0.8rem;
+        padding-bottom: 0.8rem;
+    }
+}

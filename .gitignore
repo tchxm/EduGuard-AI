@@ -1,0 +1,17 @@
+# Python cache/bytecode
+__pycache__/
+*.py[cod]
+
+# Local environment secrets
+.env
+.env.*
+!.env.example
+
+# Local runtime/database artifacts
+instance/
+*.db
+attendance_results.json
+
+# Uploaded student images (PII) should stay local
+static/dataset/*
+!static/dataset/.gitkeep

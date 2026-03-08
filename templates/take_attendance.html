@@ -1,0 +1,527 @@
+{% extends 'layout.html' %}
+
+{% block title %}Taking Attendance{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('view_class', class_id=class_obj.id) }}">{{ class_obj.name }} - {{ class_obj.section }}</a></li>
+        <li class="breadcrumb-item active">Taking Attendance</li>
+    </ol>
+</nav>
+<div class="page-header">
+    <h2 class="page-title"><i class="fas fa-clipboard-check me-2"></i>Take Attendance</h2>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm section-card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Attendance Screen</h4>
+                <span class="badge bg-light text-dark" id="detection-status">Ready</span>
+            </div>
+            <div class="card-body p-0 text-center">
+                <div class="position-relative">
+                    <div id="placeholder-screen" class="bg-light d-flex align-items-center justify-content-center" style="width: 100%; height: 400px;">
+                        <div class="text-muted">
+                            <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                            <h5>Attendance Screen</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-3 d-flex justify-content-between">
+                    <button id="start-btn" class="btn btn-success">
+                        <i class="fas fa-play me-1"></i> Start Attendance
+                    </button>
+                    <button id="stop-btn" class="btn btn-danger" disabled>
+                        <i class="fas fa-stop me-1"></i> Stop Attendance
+                    </button>
+                    <a href="{{ url_for('view_attendance', attendance_id=attendance.id) }}" class="btn btn-primary">
+                        <i class="fas fa-clipboard-list me-1"></i> View Results
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm section-card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>Attendance Status</h4>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-around text-center">
+                    <div>
+                        <h2 id="total-count">{{ students|length }}</h2>
+                        <p>Total Students</p>
+                    </div>
+                    <div>
+                        <h2 id="present-count">0</h2>
+                        <p>Students Present</p>
+                    </div>
+                </div>
+                <div class="progress mt-3">
+                    <div id="attendance-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                </div>
+                <div class="mt-3 d-flex justify-content-between align-items-center small sync-strip">
+                    <span id="sync-state" class="text-info">Idle</span>
+                    <span id="sync-pending">Pending: 0</span>
+                    <span id="sync-failed">Failed: 0</span>
+                    <span id="sync-last-update">Last update: Never</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-users me-2"></i>Students</h4>
+            </div>
+            <div class="card-body border-bottom attendance-controls">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div class="btn-group" role="group" aria-label="Student filter">
+                        <button type="button" class="btn btn-sm btn-outline-info action-chip student-filter-btn active" data-filter="all">All</button>
+                        <button type="button" class="btn btn-sm btn-outline-success action-chip student-filter-btn" data-filter="present">Present</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary action-chip student-filter-btn" data-filter="absent">Absent</button>
+                    </div>
+                    <input id="student-search" type="text" class="form-control form-control-sm" style="max-width: 220px;" placeholder="Search student">
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush" id="student-list">
+                    {% for student in students %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center" data-student-id="{{ student.id }}" data-status="absent" data-search="{{ (student.student_id ~ ' ' ~ student.name)|lower }}">
+                        <div class="d-flex align-items-center">
+                            {% if student.image_file and student.image_file != 'default.jpg' %}
+                            <img src="{{ url_for('static', filename='dataset/' + student.image_file) }}" 
+                                class="rounded-circle me-2" width="40" height="40" alt="{{ student.name }}">
+                            {% else %}
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <div>{{ student.name }}</div>
+                                <small class="text-muted">{{ student.student_id }}</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-secondary attendance-status">Absent</span>
+                            <span class="small text-info d-none row-saving ms-2">
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Saving...
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-warning d-none row-retry-btn ms-2">Retry</button>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Face Detection Status Modal -->
+<div class="modal fade" id="detectionModal" tabindex="-1" aria-labelledby="detectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="detectionModalLabel">Face Detection Status</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <div id="detection-spinner" class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2" id="detection-message">Starting face detection system...</p>
+                </div>
+                <div class="alert alert-info">
+                    <p><i class="fas fa-info-circle me-2"></i> A separate window will open with the camera feed. The system will automatically recognize and mark students as present.</p>
+                </div>
+                <div id="detection-results" class="mt-3 d-none">
+                    <h5>Students Detected:</h5>
+                    <ul id="detected-students-list" class="list-group">
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Store attendance ID
+    const attendanceId = "{{ attendance.id }}";
+    
+    // DOM elements
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const detectionStatus = document.getElementById('detection-status');
+    const presentCountElement = document.getElementById('present-count');
+    const progressBar = document.getElementById('attendance-progress');
+    const syncStateElement = document.getElementById('sync-state');
+    const syncPendingElement = document.getElementById('sync-pending');
+    const syncFailedElement = document.getElementById('sync-failed');
+    const syncLastUpdateElement = document.getElementById('sync-last-update');
+    const studentSearch = document.getElementById('student-search');
+    const studentFilterButtons = document.querySelectorAll('.student-filter-btn');
+    
+    // Modal elements
+    const detectionModal = new bootstrap.Modal(document.getElementById('detectionModal'));
+    const detectionMessage = document.getElementById('detection-message');
+    const detectionSpinner = document.getElementById('detection-spinner');
+    const detectionResults = document.getElementById('detection-results');
+    const detectedStudentsList = document.getElementById('detected-students-list');
+    
+    // Variables to track attendance
+    let isActive = false;
+    let presentStudents = new Set();
+    const totalStudents = {{ students|length }};
+    let resultsInterval = null;
+    let pendingSyncCount = 0;
+    const failedSyncStudents = new Set();
+    let lastSyncedAt = null;
+    let activeStudentFilter = 'all';
+
+    function formatTime(dateObj) {
+        return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function updateSyncStatus() {
+        if (syncPendingElement) syncPendingElement.textContent = `Pending: ${pendingSyncCount}`;
+        if (syncFailedElement) syncFailedElement.textContent = `Failed: ${failedSyncStudents.size}`;
+        if (syncLastUpdateElement) {
+            syncLastUpdateElement.textContent = `Last update: ${lastSyncedAt ? formatTime(lastSyncedAt) : 'Never'}`;
+        }
+        if (!syncStateElement) return;
+        if (pendingSyncCount > 0) {
+            syncStateElement.textContent = 'Syncing...';
+            syncStateElement.className = 'text-info';
+        } else if (failedSyncStudents.size > 0) {
+            syncStateElement.textContent = 'Out of sync';
+            syncStateElement.className = 'text-warning';
+        } else {
+            syncStateElement.textContent = 'All changes synced';
+            syncStateElement.className = 'text-success';
+        }
+    }
+
+    function applyStudentFilters() {
+        const query = (studentSearch ? studentSearch.value : '').trim().toLowerCase();
+        document.querySelectorAll('#student-list li').forEach(item => {
+            const status = item.dataset.status || 'absent';
+            const haystack = item.dataset.search || '';
+            const filterMatch = activeStudentFilter === 'all' || status === activeStudentFilter;
+            const queryMatch = !query || haystack.includes(query);
+            item.style.display = filterMatch && queryMatch ? '' : 'none';
+        });
+    }
+    
+    // Start attendance session
+    function startAttendance() {
+        isActive = true;
+        startBtn.disabled = true;
+        startBtn.dataset.originalHtml = startBtn.innerHTML;
+        startBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Starting...';
+        stopBtn.disabled = false;
+        detectionStatus.textContent = 'Active';
+        detectionStatus.classList.remove('bg-light', 'text-dark');
+        detectionStatus.classList.add('bg-success', 'text-white');
+        
+        // Show detection modal
+        detectionMessage.textContent = "Starting face detection system...";
+        detectionSpinner.classList.remove('d-none');
+        detectionResults.classList.add('d-none');
+        detectionModal.show();
+        
+        // Start face detection via API
+        fetch('/api/start_face_detection/' + attendanceId, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                detectionMessage.textContent = "Face detection is running. A separate window has opened with the camera.";
+                startBtn.innerHTML = startBtn.dataset.originalHtml || startBtn.innerHTML;
+                if (window.showToast) window.showToast('Attendance detection started.', 'success');
+                // Start checking for results
+                startResultsPolling();
+            } else {
+                detectionMessage.textContent = `Error: ${data.message}`;
+                detectionSpinner.classList.add('d-none');
+                isActive = false;
+                startBtn.disabled = false;
+                startBtn.innerHTML = startBtn.dataset.originalHtml || startBtn.innerHTML;
+                stopBtn.disabled = true;
+                detectionStatus.textContent = 'Ready';
+                detectionStatus.classList.remove('bg-success', 'text-white');
+                detectionStatus.classList.add('bg-light', 'text-dark');
+                if (window.showToast) window.showToast(data.message || 'Failed to start face detection.', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            detectionMessage.textContent = `Error starting face detection: ${error.message}`;
+            detectionSpinner.classList.add('d-none');
+            isActive = false;
+            startBtn.disabled = false;
+            startBtn.innerHTML = startBtn.dataset.originalHtml || startBtn.innerHTML;
+            stopBtn.disabled = true;
+            detectionStatus.textContent = 'Ready';
+            detectionStatus.classList.remove('bg-success', 'text-white');
+            detectionStatus.classList.add('bg-light', 'text-dark');
+            if (window.showToast) window.showToast('Network error while starting face detection.', 'danger');
+        });
+    }
+    
+    // Poll for detection results
+    function startResultsPolling() {
+        // Clear any existing interval
+        if (resultsInterval) {
+            clearInterval(resultsInterval);
+        }
+        
+        // Start polling every 3 seconds
+        resultsInterval = setInterval(() => {
+            checkDetectionResults();
+        }, 3000);
+    }
+    
+    // Check for face detection results
+    function checkDetectionResults() {
+        fetch('/api/check_face_detection_results/' + attendanceId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.has_results) {
+                updateDetectedStudents(data.marked_students);
+            }
+        })
+        .catch(error => {
+            console.error('Error checking results:', error);
+        });
+    }
+    
+    // Update the list of detected students
+    function updateDetectedStudents(students) {
+        if (students.length > 0) {
+            // Show the results section
+            detectionResults.classList.remove('d-none');
+            detectionSpinner.classList.add('d-none');
+            
+            // Clear previous list
+            detectedStudentsList.innerHTML = '';
+            
+            // Add each student to the list
+            students.forEach(student => {
+                const normalizedStudentId = String(student.id);
+                const listItem = document.createElement('li');
+                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                // Avoid nested template strings inside a Jinja template file (can confuse linters)
+                listItem.innerHTML =
+                    '<div>' + student.name + '</div>' +
+                    '<small class="text-muted">' + student.student_id + '</small>' +
+                    '<span class="badge bg-success">Present</span>';
+                detectedStudentsList.appendChild(listItem);
+                
+                // Mark student as present in the main list
+                const studentElement = document.querySelector('#student-list li[data-student-id="' + normalizedStudentId + '"]');
+                if (studentElement) {
+                    const statusBadge = studentElement.querySelector('.attendance-status');
+                    statusBadge.textContent = 'Present';
+                    statusBadge.classList.remove('bg-secondary');
+                    statusBadge.classList.add('bg-success');
+                    presentStudents.add(normalizedStudentId);
+                    studentElement.dataset.status = 'present';
+                }
+            });
+            
+            // Update counts and progress
+            presentCountElement.textContent = presentStudents.size;
+            const progress = (presentStudents.size / totalStudents) * 100;
+            progressBar.style.width = `${progress}%`;
+            applyStudentFilters();
+        }
+    }
+    
+    // Stop attendance session
+    function stopAttendance() {
+        isActive = false;
+        startBtn.disabled = false;
+        startBtn.innerHTML = startBtn.dataset.originalHtml || startBtn.innerHTML;
+        stopBtn.disabled = true;
+        detectionStatus.textContent = 'Stopped';
+        detectionStatus.classList.remove('bg-success', 'text-white');
+        detectionStatus.classList.add('bg-light', 'text-dark');
+        
+        // Stop polling for results
+        if (resultsInterval) {
+            clearInterval(resultsInterval);
+            resultsInterval = null;
+        }
+        if (window.showToast) window.showToast('Attendance session stopped.', 'info');
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        // Event listeners
+        startBtn.addEventListener('click', startAttendance);
+        stopBtn.addEventListener('click', stopAttendance);
+        
+        // Add click event for student list items to toggle attendance manually
+        // Click to toggle attendance manually:
+        // - Debounced per-student to prevent double toggles / spam clicks
+        // - Uses optimistic UI update, then reverts on API failure
+        // - Avoids lag from repeated DB commits + email logic
+        const inFlight = new Set();
+        const clickCooldownMs = 350;
+        const lastClickAt = new Map();
+        
+        async function setStudentStatus(item, studentId, makePresent) {
+            const statusBadge = item.querySelector('.attendance-status');
+            const savingIndicator = item.querySelector('.row-saving');
+            const retryBtn = item.querySelector('.row-retry-btn');
+            if (!statusBadge) return;
+
+            if (retryBtn) {
+                retryBtn.classList.add('d-none');
+                retryBtn.dataset.retryStatus = '';
+            }
+            failedSyncStudents.delete(studentId);
+            if (savingIndicator) savingIndicator.classList.remove('d-none');
+            pendingSyncCount += 1;
+            updateSyncStatus();
+            
+            // Optimistic UI
+            if (makePresent) {
+                presentStudents.add(studentId);
+                statusBadge.textContent = 'Present';
+                statusBadge.classList.remove('bg-secondary');
+                statusBadge.classList.add('bg-success');
+                item.dataset.status = 'present';
+            } else {
+                presentStudents.delete(studentId);
+                statusBadge.textContent = 'Absent';
+                statusBadge.classList.remove('bg-success');
+                statusBadge.classList.add('bg-secondary');
+                item.dataset.status = 'absent';
+            }
+            
+            // Update counts/progress
+            presentCountElement.textContent = presentStudents.size;
+            const progress = (presentStudents.size / totalStudents) * 100;
+            progressBar.style.width = `${progress}%`;
+            
+            // Persist
+            try {
+                const resp = await fetch('/api/mark_attendance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        student_id: studentId,
+                        attendance_id: attendanceId,
+                        status: makePresent
+                    })
+                });
+                
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok || data.success === false) {
+                    throw new Error(data.error || `HTTP ${resp.status}`);
+                }
+                lastSyncedAt = new Date();
+            } catch (e) {
+                // Revert UI if API fails
+                if (makePresent) {
+                    presentStudents.delete(studentId);
+                    statusBadge.textContent = 'Absent';
+                    statusBadge.classList.remove('bg-success');
+                    statusBadge.classList.add('bg-secondary');
+                    item.dataset.status = 'absent';
+                } else {
+                    presentStudents.add(studentId);
+                    statusBadge.textContent = 'Present';
+                    statusBadge.classList.remove('bg-secondary');
+                    statusBadge.classList.add('bg-success');
+                    item.dataset.status = 'present';
+                }
+                
+                presentCountElement.textContent = presentStudents.size;
+                const progress = (presentStudents.size / totalStudents) * 100;
+                progressBar.style.width = `${progress}%`;
+                
+                console.error('Failed to update attendance:', e);
+                failedSyncStudents.add(studentId);
+                if (retryBtn) {
+                    retryBtn.classList.remove('d-none');
+                    retryBtn.dataset.retryStatus = makePresent ? 'present' : 'absent';
+                }
+                if (window.showToast) {
+                    window.showToast('Failed to update attendance for this student.', 'danger');
+                }
+            } finally {
+                pendingSyncCount = Math.max(0, pendingSyncCount - 1);
+                if (savingIndicator) savingIndicator.classList.add('d-none');
+                updateSyncStatus();
+                applyStudentFilters();
+            }
+        }
+        
+        document.querySelectorAll('#student-list li').forEach(item => {
+            item.addEventListener('click', async () => {
+                if (!isActive) return;
+                
+                const studentId = String(item.dataset.studentId);
+                if (!studentId) return;
+                
+                const now = Date.now();
+                const last = lastClickAt.get(studentId) || 0;
+                if (now - last < clickCooldownMs) return;
+                lastClickAt.set(studentId, now);
+                
+                if (inFlight.has(studentId)) return;
+                inFlight.add(studentId);
+                
+                const makePresent = !presentStudents.has(studentId);
+                await setStudentStatus(item, studentId, makePresent);
+                
+                inFlight.delete(studentId);
+            });
+
+            const retryBtn = item.querySelector('.row-retry-btn');
+            if (retryBtn) {
+                retryBtn.addEventListener('click', async (event) => {
+                    event.stopPropagation();
+                    const studentId = String(item.dataset.studentId);
+                    if (!studentId || inFlight.has(studentId)) return;
+                    const retryStatus = retryBtn.dataset.retryStatus === 'present';
+                    inFlight.add(studentId);
+                    await setStudentStatus(item, studentId, retryStatus);
+                    inFlight.delete(studentId);
+                    updateSyncStatus();
+                });
+            }
+        });
+
+        if (studentSearch) {
+            studentSearch.addEventListener('input', applyStudentFilters);
+        }
+        studentFilterButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                studentFilterButtons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                activeStudentFilter = this.dataset.filter || 'all';
+                applyStudentFilters();
+            });
+        });
+
+        updateSyncStatus();
+        applyStudentFilters();
+    });
+</script>
+{% endblock %}
